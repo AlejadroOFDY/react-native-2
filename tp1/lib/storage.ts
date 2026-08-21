@@ -1,3 +1,4 @@
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import type { Arbol, Lista } from "@/constants/arboles";
 import { ARBOLES_15 } from "@/constants/arboles";
 
@@ -12,39 +13,38 @@ const INICIALES: Arbol[] = [
   "quebracho-colorado",
 ].map((id) => ARBOLES_15.find((a) => a.id === id)!);
 
-export function cargarArboles(): Arbol[] {
-  if (typeof window === "undefined") return INICIALES;
+// ponytail: AsyncStorage funciona en mobile (Android/iOS) y en web con la misma API.
+export async function cargarArboles(): Promise<Arbol[]> {
   try {
-    const raw = window.localStorage.getItem(K_ARBOLES);
+    const raw = await AsyncStorage.getItem(K_ARBOLES);
     return raw ? (JSON.parse(raw) as Arbol[]) : INICIALES;
   } catch {
     return INICIALES;
   }
 }
 
-export function guardarArboles(arboles: Arbol[]): void {
+export async function guardarArboles(arboles: Arbol[]): Promise<void> {
   try {
-    window.localStorage.setItem(K_ARBOLES, JSON.stringify(arboles));
+    await AsyncStorage.setItem(K_ARBOLES, JSON.stringify(arboles));
   } catch {
-    window.alert("No se pudo guardar en el almacenamiento local.");
+    // best-effort: no romper la app si el guardado falla.
   }
 }
 
-export function cargarListas(): Lista[] {
-  if (typeof window === "undefined") return [];
+export async function cargarListas(): Promise<Lista[]> {
   try {
-    const raw = window.localStorage.getItem(K_LISTAS);
+    const raw = await AsyncStorage.getItem(K_LISTAS);
     return raw ? (JSON.parse(raw) as Lista[]) : [];
   } catch {
     return [];
   }
 }
 
-export function guardarListas(listas: Lista[]): void {
+export async function guardarListas(listas: Lista[]): Promise<void> {
   try {
-    window.localStorage.setItem(K_LISTAS, JSON.stringify(listas));
+    await AsyncStorage.setItem(K_LISTAS, JSON.stringify(listas));
   } catch {
-    window.alert("No se pudo guardar en el almacenamiento local.");
+    // best-effort.
   }
 }
 

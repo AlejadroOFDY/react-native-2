@@ -7,6 +7,7 @@ import { router } from "expo-router";
 import { useEffect, useState } from "react";
 import {
   ImageBackground,
+  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -22,10 +23,10 @@ export default function Catalogo() {
   const [descripcion, setDescripcion] = useState("");
 
   useEffect(() => {
-    setArboles(cargarArboles());
+    cargarArboles().then(setArboles);
   }, []);
 
-  const agregar = () => {
+  const agregar = async () => {
     const nombreArbol = nombre.trim();
     if (!nombreArbol) return;
     const nuevo: Arbol = {
@@ -46,15 +47,21 @@ export default function Catalogo() {
     };
     const actualizados = [...arboles, nuevo];
     setArboles(actualizados);
-    guardarArboles(actualizados);
+    await guardarArboles(actualizados);
     setModal(false);
     setNombre("");
     setDescripcion("");
   };
 
+  const eliminarArbol = async (idArbol: string) => {
+    const actualizados = arboles.filter((a) => a.id !== idArbol);
+    setArboles(actualizados);
+    await guardarArboles(actualizados);
+  };
+
   return (
     <ImageBackground
-      source={require("@/assets/Jacarandá.webp")}
+      source={require("@/assets/Jacarandá.jpg")}
       style={styles.fondo}
       resizeMode="cover"
     >
@@ -68,18 +75,28 @@ export default function Catalogo() {
 
         <ScrollView style={styles.caja2} contentContainerStyle={styles.grilla}>
           {arboles.map((a) => (
-            <Pressable
-              key={a.id}
-              style={styles.tarjeta}
-              onPress={() => router.push(`/arbol/${a.id}`)}
-            >
-              <Texto contorno style={styles.nombre}>
-                {a.nombre}
-              </Texto>
-              <Texto contorno={false} style={styles.desc}>
-                {a.descripcion}
-              </Texto>
-            </Pressable>
+            <View key={a.id} style={styles.tarjetaContenedor}>
+              <Pressable
+                style={styles.tarjeta}
+                onPress={() => router.push(`/arbol/${a.id}`)}
+              >
+                <Texto contorno style={styles.nombre}>
+                  {a.nombre}
+                </Texto>
+                <Texto contorno={false} style={styles.desc}>
+                  {a.descripcion}
+                </Texto>
+              </Pressable>
+              <Pressable
+                style={styles.eliminar}
+                onPress={() => eliminarArbol(a.id)}
+                accessibilityLabel={`Eliminar ${a.nombre}`}
+              >
+                <Texto contorno={false} style={styles.eliminarX}>
+                  ✕
+                </Texto>
+              </Pressable>
+            </View>
           ))}
         </ScrollView>
       </View>
@@ -109,17 +126,24 @@ export default function Catalogo() {
 }
 
 const styles = StyleSheet.create({
-  fondo: { flex: 1, width: "100%" },
+  // ponytail: en web sin height el <Image> interno toma el alto natural de la foto (se corta en blanco). Solo web; mobile intacto.
+  fondo: {
+    flex: 1,
+    width: "100%",
+    ...Platform.select({ web: { height: "100%" } }),
+  },
   contenido: { flex: 1, padding: 20, gap: 16 },
   caja1: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
+    flexWrap: "wrap",
+    rowGap: 10,
     backgroundColor: "rgba(255,255,255,0.82)",
     borderRadius: 14,
     padding: 14,
   },
-  h2: { fontSize: 28, fontWeight: "bold" },
+  h2: { fontSize: 28, fontWeight: "bold", flexShrink: 1 },
   caja2: {
     flex: 1,
     backgroundColor: "rgba(255,255,255,0.82)",
@@ -127,6 +151,20 @@ const styles = StyleSheet.create({
     padding: 14,
   },
   grilla: { gap: 14 },
+  tarjetaContenedor: { position: "relative" },
+  eliminar: {
+    position: "absolute",
+    top: 8,
+    right: 8,
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    backgroundColor: "#c62828",
+    alignItems: "center",
+    justifyContent: "center",
+    zIndex: 1,
+  },
+  eliminarX: { color: "#fff", fontSize: 16, fontWeight: "bold" },
   tarjeta: {
     backgroundColor: "rgba(255,255,255,0.9)",
     borderRadius: 12,

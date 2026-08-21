@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { Modal, Pressable, StyleSheet } from "react-native";
+import { Modal, Pressable, StyleSheet, Text, View } from "react-native";
 import Texto from "./texto";
 
 type Props = {
@@ -20,9 +20,19 @@ export default function Caja({ visible, titulo, onCerrar, children }: Props) {
     >
       <Pressable style={styles.fondo} onPress={onCerrar}>
         <Pressable style={styles.caja} onPress={(e) => e.stopPropagation()}>
-          <Texto contorno={false} style={styles.titulo}>
-            {titulo}
-          </Texto>
+          <View style={styles.encabezado}>
+            <Texto contorno={false} style={styles.titulo}>
+              {titulo}
+            </Texto>
+            <Pressable
+              style={styles.cerrar}
+              onPress={onCerrar}
+              accessibilityRole="button"
+              accessibilityLabel="Cerrar"
+            >
+              <Text style={styles.cerrarX}>✕</Text>
+            </Pressable>
+          </View>
           {children}
         </Pressable>
       </Pressable>
@@ -46,5 +56,21 @@ const styles = StyleSheet.create({
     maxWidth: 420,
     gap: 12,
   },
-  titulo: { fontSize: 22, fontWeight: "bold", marginBottom: 4 },
+  encabezado: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 12,
+    marginBottom: 4,
+  },
+  titulo: { fontSize: 22, fontWeight: "bold", flexShrink: 1 },
+  cerrar: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: "#e0e0e0",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  cerrarX: { fontSize: 16, fontWeight: "bold", color: "#000" },
 });

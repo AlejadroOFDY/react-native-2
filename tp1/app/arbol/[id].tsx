@@ -14,18 +14,22 @@ import * as ImagePicker from "expo-image-picker";
 import { router, useLocalSearchParams } from "expo-router";
 import { useEffect, useState } from "react";
 import { Image, ScrollView, StyleSheet, TextInput, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 // Ficha de un árbol: imagen, subir imagen, nombre, taxonomía y descripción.
 export default function FichaArbol() {
   const { id } = useLocalSearchParams<{ id: string }>();
+  const insets = useSafeAreaInsets();
   const [arbol, setArbol] = useState<Arbol | null>(null);
   const [listas, setListas] = useState<Lista[]>([]);
   const [modal, setModal] = useState(false);
   const [nombreNueva, setNombreNueva] = useState("");
 
   useEffect(() => {
-    setArbol(cargarArboles().find((a) => a.id === id) ?? null);
-    setListas(cargarListas());
+    Promise.all([cargarArboles(), cargarListas()]).then(([a, l]) => {
+      setArbol(a.find((x) => x.id === id) ?? null);
+      setListas(l);
+    });
   }, [id]);
 
   if (!arbol) {
@@ -48,14 +52,14 @@ export default function FichaArbol() {
     const base64 = resultado.canceled ? null : resultado.assets[0]?.base64;
     if (!base64) return;
     const dataUri = `data:image/jpeg;base64,${base64}`;
-    const actualizados = cargarArboles().map((a) =>
+    const actualizados = (await cargarArboles()).map((a) =>
       a.id === arbol.id ? { ...a, imagenPersonalizada: dataUri } : a,
     );
-    guardarArboles(actualizados);
+    await guardarArboles(actualizados);
     setArbol({ ...arbol, imagenPersonalizada: dataUri });
   };
 
-  const agregarAFavoritos = (listaId?: string) => {
+  const agregarAFavoritos = async (listaId?: string) => {
     const actualizadas = listaId
       ? listas.map((l) =>
           l.id === listaId && !l.arboles.includes(arbol.id)
@@ -70,7 +74,7 @@ export default function FichaArbol() {
             arboles: [arbol.id],
           },
         ];
-    guardarListas(actualizadas);
+    await guardarListas(actualizadas);
     setModal(false);
     setNombreNueva("");
     router.push("/favoritos");
@@ -78,6 +82,10 @@ export default function FichaArbol() {
 
   return (
     <View style={styles.fondo}>
+      <View style={[styles.volver, { top: insets.top + 8 }]}>
+        <Boton titulo="Volver" onPress={() => router.push("/catalogo")} />
+      </View>
+
       <ScrollView contentContainerStyle={styles.contenido}>
         <Image source={fuente} style={styles.imagen} resizeMode="cover" />
         <Boton
@@ -158,6 +166,7 @@ export default function FichaArbol() {
 
 const styles = StyleSheet.create({
   fondo: { flex: 1, backgroundColor: "#f1eee6" },
+  volver: { position: "absolute", left: 16, zIndex: 10 },
   contenido: { alignItems: "center", padding: 20, gap: 12 },
   imagen: {
     width: 220,

@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import {
   Image,
   ImageBackground,
+  Platform,
   ScrollView,
   StyleSheet,
   View,
@@ -34,7 +35,7 @@ export default function MasArboles() {
         <View style={styles.caja}>
           {cargando ? (
             <Texto contorno style={styles.espera}>
-              Espera mientras nuestra backend responde...
+              Espera mientras nuestro backend responde...
             </Texto>
           ) : (
             ARBOLES_15.map((a) => (
@@ -62,7 +63,12 @@ export default function MasArboles() {
 }
 
 const styles = StyleSheet.create({
-  fondo: { flex: 1, width: "100%" },
+  // ponytail: en web sin height el <Image> interno toma el alto natural de la foto (se corta en blanco). Solo web; mobile intacto.
+  fondo: {
+    flex: 1,
+    width: "100%",
+    ...Platform.select({ web: { height: "100%" } }),
+  },
   contenido: { padding: 20, gap: 16 },
   h1: { fontSize: 40, fontWeight: "bold", textAlign: "center" },
   caja: {

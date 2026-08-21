@@ -1,7 +1,7 @@
 import Boton from "@/components/boton";
 import Caja from "@/components/modal";
 import Texto from "@/components/texto";
-import type { Lista } from "@/constants/arboles";
+import type { Arbol, Lista } from "@/constants/arboles";
 import { ARBOL_GENERICO, IMAGENES_DEFECTO } from "@/constants/imagenes";
 import {
   cargarArboles,
@@ -14,6 +14,7 @@ import { useEffect, useState } from "react";
 import {
   Image,
   ImageBackground,
+  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -23,6 +24,7 @@ import {
 
 // Vista 3: favoritos / listas.
 export default function Favoritos() {
+  const [arboles, setArboles] = useState<Arbol[]>([]);
   const [listas, setListas] = useState<Lista[]>([]);
   const [modal, setModal] = useState(false);
   const [nombre, setNombre] = useState("");
@@ -30,13 +32,15 @@ export default function Favoritos() {
   const [guardada, setGuardada] = useState(false);
 
   useEffect(() => {
-    setListas(cargarListas());
+    Promise.all([cargarArboles(), cargarListas()]).then(([a, l]) => {
+      setArboles(a);
+      setListas(l);
+    });
   }, []);
 
-  const arboles = cargarArboles();
   const abierta = listas.find((l) => l.id === abiertaId) ?? null;
 
-  const crearLista = () => {
+  const crearLista = async () => {
     const lista: Lista = {
       id: nuevoId(),
       nombre: nombre.trim() || "Mi lista",
@@ -44,13 +48,13 @@ export default function Favoritos() {
     };
     const actualizadas = [...listas, lista];
     setListas(actualizadas);
-    guardarListas(actualizadas);
+    await guardarListas(actualizadas);
     setModal(false);
     setNombre("");
     setAbiertaId(lista.id);
   };
 
-  const quitar = (idArbol: string) => {
+  const quitar = async (idArbol: string) => {
     if (!abierta) return;
     const actualizadas = listas.map((l) =>
       l.id === abierta.id
@@ -58,11 +62,18 @@ export default function Favoritos() {
         : l,
     );
     setListas(actualizadas);
-    guardarListas(actualizadas);
+    await guardarListas(actualizadas);
   };
 
-  const guardarLista = () => {
-    guardarListas(listas);
+  const eliminarLista = async (idLista: string) => {
+    const actualizadas = listas.filter((l) => l.id !== idLista);
+    setListas(actualizadas);
+    await guardarListas(actualizadas);
+    if (abiertaId === idLista) setAbiertaId(null);
+  };
+
+  const guardarLista = async () => {
+    await guardarListas(listas);
     setGuardada(true);
     setTimeout(() => setGuardada(false), 2000);
   };
@@ -71,7 +82,7 @@ export default function Favoritos() {
 
   return (
     <ImageBackground
-      source={require("@/assets/Lapacho-Rosado.webp")}
+      source={require("@/assets/Lapacho-Rosado.jpg")}
       style={styles.fondo}
       resizeMode="cover"
     >
@@ -146,22 +157,32 @@ export default function Favoritos() {
           ) : (
             <>
               {listas.map((l) => (
-                <Pressable
-                  key={l.id}
-                  style={styles.cajita}
-                  onPress={() => setAbiertaId(l.id)}
-                >
-                  <Texto contorno style={styles.nombreLista}>
-                    {l.nombre}
-                  </Texto>
-                  <View style={styles.punteada}>
-                    <Texto contorno style={styles.mas}>
-                      +
+                <View key={l.id} style={styles.filaLista}>
+                  <Pressable
+                    style={styles.cajita}
+                    onPress={() => setAbiertaId(l.id)}
+                  >
+                    <Texto contorno style={styles.nombreLista}>
+                      {l.nombre}
                     </Texto>
-                  </View>
-                </Pressable>
+                    <View style={styles.punteada}>
+                      <Texto contorno style={styles.mas}>
+                        +
+                      </Texto>
+                    </View>
+                  </Pressable>
+                  <Pressable
+                    style={styles.quitar}
+                    onPress={() => eliminarLista(l.id)}
+                    accessibilityLabel={`Eliminar lista ${l.nombre}`}
+                  >
+                    <Texto contorno={false} style={styles.quitarX}>
+                      ✕
+                    </Texto>
+                  </Pressable>
+                </View>
               ))}
-              <Boton titulo="crear listas" onPress={() => setModal(true)} />
+              <Boton titulo="Crear Listas" onPress={() => setModal(true)} />
             </>
           )}
         </View>
@@ -185,7 +206,12 @@ export default function Favoritos() {
 }
 
 const styles = StyleSheet.create({
-  fondo: { flex: 1, width: "100%" },
+  // ponytail: en web sin height el <Image> interno toma el alto natural de la foto (se corta en blanco). Solo web; mobile intacto.
+  fondo: {
+    flex: 1,
+    width: "100%",
+    ...Platform.select({ web: { height: "100%" } }),
+  },
   contenido: { padding: 20, gap: 16 },
   h1: { fontSize: 40, fontWeight: "bold", textAlign: "center" },
   caja: {
@@ -196,6 +222,12 @@ const styles = StyleSheet.create({
   },
   h2: { fontSize: 28, fontWeight: "bold" },
   cajita: { alignItems: "center", gap: 6 },
+  filaLista: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 10,
+  },
   nombreLista: { fontSize: 20, fontWeight: "bold" },
   punteada: {
     width: 110,

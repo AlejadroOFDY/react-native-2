@@ -16,7 +16,7 @@ Este trabajo práctico consiste en una aplicación **web sin backend** que prese
 
 ### Vista 1 — Portada
 
-- Fondo: imagen del **Ceibo** (`Ceibo.avif`).
+- Fondo: imagen del **Ceibo** (`Ceibo.jpg`).
 - Título en h1 negro con contorno blanco: _«Especies Arbóreas Autóctonas de Argentina»_.
 - Texto de presentación centrado.
 - Botón «Ver catálogo» (verde, redondeado, letras blancas y borde negro) que lleva a la Vista 2.
