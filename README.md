@@ -1,50 +1,34 @@
-# Welcome to your Expo app 👋
+# Especies Arbóreas Autóctonas de Argentina 🌳
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+Aplicación **web sin backend** (mock) construida con **Expo SDK 54 + React Native Web**, sobre el tema de los árboles nativos de Argentina.
 
-## Get started
+Consta de **4 vistas**:
 
-1. Install dependencies
+1. **Portada** — Fondo con la imagen del ceibo, título con contorno blanco y botón «Ver catálogo».
+2. **Catálogo** — «Árboles Actuales» (ceibo, jacarandá, lapacho rosado y quebracho colorado) con la posibilidad de **agregar árboles**. Cada árbol abre su propia ficha.
+3. **Favoritos** — Creación de **listas** (cajas punteadas con «+») donde se guardan árboles favoritos. Todo persiste en el dispositivo.
+4. **¡Algunos Árboles más!** — Mock de backend: tras 3 segundos muestra los **15 árboles** de la guía (imagen genérica + descripción).
 
-   ```bash
-   npm install
-   ```
+## Características
 
-2. Start the app
+- Tipografía **Times New Roman** en todas las vistas.
+- Letras negras con **contorno blanco** para legibilidad sobre los fondos.
+- Botones verdes redondeados, letras blancas y borde negro.
+- Fichas de árboles con: imagen, subida de imagen, nombre científico, taxonomía y descripción.
+- Persistencia con `localStorage` (árboles y listas de favoritos).
 
-   ```bash
-   npx expo start
-   ```
+## Requisitos
 
-In the output, you'll find options to open the app in a
+- Node.js
+- npm
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
-
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
+## Ejecución
 
 ```bash
-npm run reset-project
+npm install
+npm run web
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+Se abre en el navegador en `http://localhost:8081`.
 
-## Learn more
-
-To learn more about developing your project with Expo, look at the following resources:
-
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
-
-## Join the community
-
-Join our community of developers creating universal apps.
-
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+> Los datos de los 15 árboles provienen de `assets/Arboles_Nativos_Argentina.pdf` y sus fotos se extrajeron a `assets/arboles/`. Ver `INFORME.md` para el detalle de las vistas.

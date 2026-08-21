@@ -1,0 +1,30 @@
+/* Estilos globales (web). */
+* {
+  font-family: "Times New Roman", Times, serif !important;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+}
+
+/* Contorno blanco: letras negras legibles sobre cualquier fondo.
+   Se aplica vía dataSet (react-native-web no reenvía className). */
+[data-outline="true"] {
+  color: #000000;
+  text-shadow:
+    1px 1px 0 #ffffff,
+    -1px -1px 0 #ffffff,
+    1px -1px 0 #ffffff,
+    -1px 1px 0 #ffffff,
+    1px 0 0 #ffffff,
+    -1px 0 0 #ffffff,
+    0 1px 0 #ffffff,
+    0 -1px 0 #ffffff,
+    2px 2px 0 #ffffff,
+    -2px -2px 0 #ffffff,
+    2px -2px 0 #ffffff,
+    -2px 2px 0 #ffffff;
+}
