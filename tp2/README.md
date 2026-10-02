@@ -1,56 +1,190 @@
-# Welcome to your Expo app 👋
+# Comedor IPF — TP2 (Expo Router, SDK 57)
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+Aplicación móvil del **comedor del Instituto Politécnico Formosa**. Los alumnos piden comida
+desde el celular y la cocina atiende los pedidos **por orden de llegada**. El sistema combina dos
+estructuras de datos propias:
 
-## Get started
+- una **Cola** para los pedidos (FIFO: nadie se cuela),
+- una **Pila** para el carrito (deshacer la última acción) y para el historial de atendidos.
 
-1. Install dependencies
+Desarrollado con **Expo Router (SDK 57) + TypeScript**, siguiendo las consignas del Trabajo Práctico
+N° 2 (Taller Complementario — React Native II).
 
-   ```bash
-   npm install
-   ```
+---
 
-2. Start the app
-
-   ```bash
-   npx expo start
-   ```
-
-In the output, you'll find options to open the app in a
-
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
-
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
+## Cómo correr
 
 ```bash
-npm run reset-project
+npm install          # dependencias
+npx expo start       # servidor de desarrollo (Elegir 'a' Android, 'w' web, etc.)
+npx expo start --android
+npx expo start --web
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+Verificación estática:
 
-### Other setup steps
+```bash
+npx tsc --noEmit     # typecheck
+npx expo lint        # lint
+```
 
-- To set up ESLint for linting, run `npx expo lint`, or follow our guide on ["Using ESLint and Prettier"](https://docs.expo.dev/guides/using-eslint/)
-- If you'd like to set up unit testing, follow our guide on ["Unit Testing with Jest"](https://docs.expo.dev/develop/unit-testing/)
-- Learn more about the TypeScript setup in this template in our guide on ["Using TypeScript"](https://docs.expo.dev/guides/typescript/)
+> Las dependencias nativas se instalan ** siempre** con `npx expo install <paquete>` para que la
+> versión sea compatible con el SDK / Expo Go.
 
-## Learn more
+### Credenciales de la cocina
 
-To learn more about developing your project with Expo, look at the following resources:
+La sección Cocina está protegida. Usuario y clave fijos en el código (demo):
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+| Usuario | Clave |
+|---------|-------|
+| `cocina` | `cocina123` |
 
-## Join the community
+---
 
-Join our community of developers creating universal apps.
+## Árbol de rutas (`src/app`)
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+```
+src/app/
+├─ _layout.tsx                 Stack raíz
+├─ +not-found.tsx              404 (muestra la URL inexistente)
+├─ buscar.tsx                  /buscar          (q y categoria en la URL)
+├─ confirmar.tsx               /confirmar       (modal)
+├─ login.tsx                   /login           (modal, solo existe sin sesión)
+├─ pedido.tsx                  /pedido          (Redirect -> /carrito)
+├─ (tabs)/
+│  ├─ _layout.tsx              Tabs (expo-router/js-tabs)
+│  ├─ index.tsx                /                (Inicio)
+│  ├─ menu/
+│  │  ├─ _layout.tsx           Stack de la tab Menú
+│  │  ├─ index.tsx             /menu
+│  │  └─ [id].tsx              /menu/[id]
+│  └─ carrito/
+│     ├─ _layout.tsx           Stack de la tab Carrito
+│     ├─ index.tsx             /carrito
+│     └─ nota.tsx              /carrito/nota
+├─ categorias/
+│  └─ [categoria].tsx          /categorias/[categoria]
+├─ turno/
+│  └─ [numero].tsx             /turno/[numero]
+├─ ayuda/
+│  ├─ index.tsx                /ayuda
+│  └─ [...slug].tsx            /ayuda/...       (catch-all)
+└─ (cocina)/
+   ├─ _layout.tsx              Drawer (solo con sesión)
+   ├─ index.tsx                /cocina
+   └─ atendidos.tsx            /cocina/atendidos
+```
+
+### Navegador de cada `_layout`
+
+| Layout | Navegador | Contenido |
+|--------|-----------|-----------|
+| `src/app/_layout.tsx` | **Stack** raíz (ancla `(tabs)`) | `(tabs)`, `confirmar` (modal), `(cocina)` *(protegida: con sesión)* y `login` *(protegida: sin sesión)*. También monta `GestureHandlerRootView`, el `ThemeProvider` y el `AppProvider`. |
+| `src/app/(tabs)/_layout.tsx` | **Tabs** (`expo-router/js-tabs`) | Pestañas **Inicio**, **Menú** y **Carrito** (con *badge* de cantidad de ítems). |
+| `src/app/(tabs)/menu/_layout.tsx` | **Stack** | Lista (`/menu`) + detalle (`/menu/[id]`). |
+| `src/app/(tabs)/carrito/_layout.tsx` | **Stack** | Carrito (`/carrito`) + nota (`/carrito/nota`). |
+| `src/app/(cocina)/_layout.tsx` | **Drawer** (`expo-router/drawer`) | Cocina (`/cocina`) + Atendidos (`/cocina/atendidos`). |
+
+---
+
+## Organización del código
+
+```
+src/
+├─ app/            solo rutas (cada archivo, una pantalla; cada _layout, un navegador)
+├─ components/     Boton, DondeEstoy, Pantalla, ThemedText, ThemedView
+├─ constants/      theme (colores, espaciados)
+├─ context/        AppContext (sesión, carrito, cola y pilas)
+├─ data/           platos.ts (16 platos en 4 categorías)
+└─ estructuras/    Pila.ts y Cola.ts (implementación propia)
+```
+
+### Estructuras propias (`src/estructuras`)
+
+- **`Pila<T>`**: `#items`, `push`, `pop`, `tope`, getters `vacia` y `tamanio`, y `aArray()` (copia).
+- **`Cola<T>`**: guarda un **índice de frente** (`#frente`) y **no usa `shift()`**; `encolar`,
+  `desencolar`, `frente`, getters `vacia` y `tamanio`, y `aArray()`. Compacta el array cuando el
+  frente crece demasiado.
+
+### Estado global (`src/context/AppContext.tsx`)
+
+El provider vive en el layout raíz. La sesión y la nota son estado de React; el **carrito (pila de
+acciones)**, la **cola de pedidos** y la **pila de atendidos** viven en un store externo con
+`useSyncExternalStore`, de modo que las estructuras mutables de `Pila`/`Cola` son la fuente de
+verdad y React se entera de cada cambio.
+
+- **Carrito + Deshacer**: cada «Agregar al carrito» hace `push` en la pila de acciones. El carrito
+  agrupa por plato con cantidad. «Deshacer último» hace `pop` y quita una unidad del último plato
+  agregado (la línea desaparece cuando llega a 0). El botón se deshabilita con la pila vacía.
+- **Cola de pedidos**: al confirmar se asigna un número correlativo (`#001`, `#002`, …) y se
+  **encola**. La cocina muestra `frente()` y «Atender siguiente» **desencola**; nadie se cuela.
+- **Atendidos**: cada pedido atendido se apila; `/cocina/atendidos` lo muestra del **tope a la base**
+  (último atendido primero).
+
+---
+
+## `replace` vs `push` en el flujo de confirmación
+
+Al confirmar el pedido, la pantalla `/confirmar` navega al turno con **`router.replace()`** hacia
+`/turno/[numero]`:
+
+```ts
+const numero = confirmarPedido();
+router.replace({ pathname: '/turno/[numero]', params: { numero: String(numero) } });
+```
+
+**¿Por qué `replace` y no `push`?** Porque la confirmación **no debe quedar debajo del turno**. Si
+usáramos `push`, al tocar «atrás» desde la pantalla del turno el usuario volvería al resumen de un
+pedido **ya enviado**, lo que confunde y podría llevarlo a confirmar dos veces. Con `replace`, el
+resumen se reemplaza por el turno y «atrás» vuelve a una pantalla coherente (la tab/ancla), no al
+formulario de confirmación.
+
+---
+
+## Deep links
+
+Con `"scheme": "comedoripf"` en `app.json` y `anchor: "(tabs)"` en el layout raíz.
+
+- **App instalada (build propia):** `comedoripf://menu/7`
+- **Expo Go en desarrollo** (IP de la compu de desarrollo, puerto 8081):
+
+  ```
+  exp://192.168.1.20:8081/--/menu/7
+  ```
+
+  `exp://<IP>:<puerto>` es el host de Expo Go; `/--/` separa ese host del **path de la app**, y
+  `/menu/7` abre directamente el plato 7. (Reemplazá `192.168.1.20` por la IP que muestra
+  `npx expo start`.)
+- **Web:** `http://localhost:8081/menu/7`
+
+> El `scheme` propio (`comedoripf://`) **no** funciona dentro de Expo Go: allí el scheme es
+> `exp://`. `comedoripf://` solo se registra en una build propia (dev build o standalone).
+
+---
+
+## Capturas / video
+
+| Archivo | Contenido |
+|---------|-----------|
+| [`assets/capturas/react.mp4`](assets/capturas/react.mp4) | 1) Carrito con **Deshacer último**. 2) Pantalla **Turno** (número y pedidos adelante). 3) **Cocina** atendiendo pedidos. 4) **Login / Logout** (la sección Cocina desaparece). |
+| [`assets/capturas/react2.mp4`](assets/capturas/react2.mp4) | 5) Pantalla **404** al abrir una URL inexistente. |
+
+Deep link de prueba para Expo Go (abre directo el plato 7): `exp://<IP>:8081/--/menu/7`
+(ver [Deep links](#deep-links)).
+
+---
+
+## Preguntas frecuentes de la defensa (referencia rápida)
+
+- **`/confirmar` → `/turno`**: `replace` (ver más arriba).
+- **Logout en `/cocina/atendidos`**: esa pantalla deja de existir porque `(cocina)` está dentro de
+  `Stack.Protected guard={conSesion}`; no hace falta `router.back()`.
+- **`/cocina` sin sesión → 404 esperado**: la sección está detrás de `Stack.Protected
+  guard={conSesion}`; abrir la URL directo (o refrescar la web) sin sesión cae en `+not-found`.
+  Primero hay que iniciar sesión: Inicio → Cocina (`cocina` / `cocina123`).
+- **Deshacer usa pila** porque se deshace **la última** acción (LIFO); **los pedidos usan cola**
+  porque se atienden **por orden de llegada** (FIFO).
+- **`comedoripf://menu/999`** → la ruta existe (`[id]`) pero la pantalla valida y muestra «No existe
+  el plato». **`comedoripf://no-existe`** → `+not-found` (404).
+- **Deep link a `/categorias/bebidas`** → debajo queda `(tabs)` gracias a
+  `unstable_settings = { anchor: "(tabs)" }`.
