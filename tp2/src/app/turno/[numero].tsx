@@ -38,6 +38,12 @@ export default function TurnoScreen() {
         </ThemedText>
       )}
 
+      {valido && adelante >= 0 && (
+        <ThemedText themeColor="textSecondary">
+          Espera estimada: ~{(adelante + 1) * 3} minutos (3 min por pedido).
+        </ThemedText>
+      )}
+
       {valido && adelante < 0 && atendido && (
         <ThemedText>Tu pedido ya fue atendido por la cocina.</ThemedText>
       )}

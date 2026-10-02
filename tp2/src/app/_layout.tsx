@@ -16,10 +16,6 @@ function NavegacionRaiz() {
       <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
       <Stack.Screen name="confirmar" options={{ presentation: 'modal', title: 'Confirmar pedido' }} />
 
-      <Stack.Protected guard={conSesion}>
-        <Stack.Screen name="(cocina)" options={{ headerShown: false }} />
-      </Stack.Protected>
-
       <Stack.Protected guard={!conSesion}>
         <Stack.Screen name="login" options={{ presentation: 'modal', title: 'Ingreso de cocina' }} />
       </Stack.Protected>

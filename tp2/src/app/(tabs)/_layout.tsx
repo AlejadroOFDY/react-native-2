@@ -4,7 +4,7 @@ import { Tabs } from 'expo-router/js-tabs';
 import { useApp } from '@/context/AppContext';
 
 export default function TabsLayout() {
-  const { cantidadItems } = useApp();
+  const { cantidadItems, conSesion } = useApp();
 
   return (
     <Tabs screenOptions={{ headerShown: false }}>
@@ -32,6 +32,18 @@ export default function TabsLayout() {
           tabBarIcon: ({ color, size }) => <Ionicons name="cart-outline" color={color} size={size} />,
         }}
       />
+
+      <Tabs.Protected guard={conSesion}>
+        <Tabs.Screen
+          name="cocina"
+          options={{
+            title: 'Cocina',
+            tabBarIcon: ({ color, size }) => (
+              <Ionicons name="flame-outline" color={color} size={size} />
+            ),
+          }}
+        />
+      </Tabs.Protected>
     </Tabs>
   );
 }

@@ -58,32 +58,32 @@ src/app/
 │  │  ├─ _layout.tsx           Stack de la tab Menú
 │  │  ├─ index.tsx             /menu
 │  │  └─ [id].tsx              /menu/[id]
-│  └─ carrito/
-│     ├─ _layout.tsx           Stack de la tab Carrito
-│     ├─ index.tsx             /carrito
-│     └─ nota.tsx              /carrito/nota
+│  ├─ carrito/
+│  │  ├─ _layout.tsx           Stack de la tab Carrito
+│  │  ├─ index.tsx             /carrito
+│  │  └─ nota.tsx              /carrito/nota (formSheet)
+│  └─ cocina/
+│     ├─ _layout.tsx           Drawer de la tab protegida (solo con sesión)
+│     ├─ index.tsx             /cocina
+│     └─ atendidos.tsx         /cocina/atendidos
 ├─ categorias/
 │  └─ [categoria].tsx          /categorias/[categoria]
 ├─ turno/
 │  └─ [numero].tsx             /turno/[numero]
-├─ ayuda/
-│  ├─ index.tsx                /ayuda
-│  └─ [...slug].tsx            /ayuda/...       (catch-all)
-└─ (cocina)/
-   ├─ _layout.tsx              Drawer (solo con sesión)
-   ├─ index.tsx                /cocina
-   └─ atendidos.tsx            /cocina/atendidos
+└─ ayuda/
+   ├─ index.tsx                /ayuda
+   └─ [...slug].tsx            /ayuda/...       (catch-all)
 ```
 
 ### Navegador de cada `_layout`
 
 | Layout | Navegador | Contenido |
 |--------|-----------|-----------|
-| `src/app/_layout.tsx` | **Stack** raíz (ancla `(tabs)`) | `(tabs)`, `confirmar` (modal), `(cocina)` *(protegida: con sesión)* y `login` *(protegida: sin sesión)*. También monta `GestureHandlerRootView`, el `ThemeProvider` y el `AppProvider`. |
-| `src/app/(tabs)/_layout.tsx` | **Tabs** (`expo-router/js-tabs`) | Pestañas **Inicio**, **Menú** y **Carrito** (con *badge* de cantidad de ítems). |
-| `src/app/(tabs)/menu/_layout.tsx` | **Stack** | Lista (`/menu`) + detalle (`/menu/[id]`). |
-| `src/app/(tabs)/carrito/_layout.tsx` | **Stack** | Carrito (`/carrito`) + nota (`/carrito/nota`). |
-| `src/app/(cocina)/_layout.tsx` | **Drawer** (`expo-router/drawer`) | Cocina (`/cocina`) + Atendidos (`/cocina/atendidos`). |
+| `src/app/_layout.tsx` | **Stack** raíz (ancla `(tabs)`) | `(tabs)`, `confirmar` (modal) y `login` *(protegida con `Stack.Protected`: solo sin sesión)*. También monta `GestureHandlerRootView`, el `ThemeProvider` y el `AppProvider`. |
+| `src/app/(tabs)/_layout.tsx` | **Tabs** (`expo-router/js-tabs`) | Pestañas **Inicio**, **Menú** y **Carrito** (con *badge* de cantidad de ítems); **Cocina** dentro de `Tabs.Protected guard={conSesion}`. |
+| `src/app/(tabs)/menu/_layout.tsx` | **Stack** | Lista (`/menu`) + detalle (`/menu/[id]`); el `headerTitle` usa `ContadorPila`. |
+| `src/app/(tabs)/carrito/_layout.tsx` | **Stack** | Carrito (`/carrito`) + nota (`/carrito/nota`, `presentation: 'formSheet'`). |
+| `src/app/(tabs)/cocina/_layout.tsx` | **Drawer** (`expo-router/drawer`) | Cocina (`/cocina`) + Atendidos (`/cocina/atendidos`), dentro de la tab protegida. |
 
 ---
 
@@ -92,7 +92,7 @@ src/app/
 ```
 src/
 ├─ app/            solo rutas (cada archivo, una pantalla; cada _layout, un navegador)
-├─ components/     Boton, DondeEstoy, Pantalla, ThemedText, ThemedView
+├─ components/     Boton, ContadorPila, DondeEstoy, Pantalla, ThemedText, ThemedView
 ├─ constants/      theme (colores, espaciados)
 ├─ context/        AppContext (sesión, carrito, cola y pilas)
 ├─ data/           platos.ts (16 platos en 4 categorías)
@@ -166,7 +166,7 @@ Con `"scheme": "comedoripf"` en `app.json` y `anchor: "(tabs)"` en el layout ra�
 
 | Archivo | Contenido |
 |---------|-----------|
-| [`assets/capturas/react.mp4`](assets/capturas/react.mp4) | 1) Carrito con **Deshacer último**. 2) Pantalla **Turno** (número y pedidos adelante). 3) **Cocina** atendiendo pedidos. 4) **Login / Logout** (la sección Cocina desaparece). |
+| [`assets/capturas/react3.mp4`](assets/capturas/react3.mp4) | 1) Carrito con **Deshacer último**. 2) Pantalla **Turno** (número, pedidos adelante y espera estimada). 3) **Cocina** como tab protegida atendiendo pedidos. 4) **Login / Logout** (la tab Cocina aparece y desaparece). |
 | [`assets/capturas/react2.mp4`](assets/capturas/react2.mp4) | 5) Pantalla **404** al abrir una URL inexistente. |
 
 Deep link de prueba para Expo Go (abre directo el plato 7): `exp://<IP>:8081/--/menu/7`
@@ -174,14 +174,29 @@ Deep link de prueba para Expo Go (abre directo el plato 7): `exp://<IP>:8081/--/
 
 ---
 
+## Desafíos opcionales implementados (G4)
+
+- **Contador de pila** — `src/components/ContadorPila.tsx` usa `useNavigation().getState()` y muestra
+  cuántas pantallas hay en la pila; se aplica como `headerTitle` del Stack de Menú (pasa de 1 a 2 al
+  abrir `/menu/[id]`).
+- **Tab protegida «Cocina»** — la sección Cocina (Drawer) vive dentro de la tab y aparece solo con
+  sesión mediante `Tabs.Protected guard={conSesion}`; al cerrar sesión desaparece del historial.
+- **Hoja inferior** — `/carrito/nota` se presenta con `presentation: 'formSheet'` y
+  `sheetAllowedDetents: [0.5]`. En iOS es una hoja inferior; en Android cae a `modal` (limitación de
+  `react-native-screens`).
+- **Tiempo estimado** — `/turno/[numero]` calcula la espera como `posición × 3 min`, donde la
+  posición es `pedidosAdelante + 1`.
+
+---
+
 ## Preguntas frecuentes de la defensa (referencia rápida)
 
 - **`/confirmar` → `/turno`**: `replace` (ver más arriba).
-- **Logout en `/cocina/atendidos`**: esa pantalla deja de existir porque `(cocina)` está dentro de
-  `Stack.Protected guard={conSesion}`; no hace falta `router.back()`.
-- **`/cocina` sin sesión → 404 esperado**: la sección está detrás de `Stack.Protected
-  guard={conSesion}`; abrir la URL directo (o refrescar la web) sin sesión cae en `+not-found`.
-  Primero hay que iniciar sesión: Inicio → Cocina (`cocina` / `cocina123`).
+- **Logout en `/cocina/atendidos`**: esa pantalla deja de existir porque `(tabs)/cocina` está dentro
+  de `Tabs.Protected guard={conSesion}`; no hace falta `router.back()`.
+- **`/cocina` sin sesión → 404 esperado**: la tab está detrás de `Tabs.Protected guard={conSesion}`;
+  abrir la URL directo (o refrescar la web) sin sesión cae en `+not-found`. Primero hay que iniciar
+  sesión: Inicio → Cocina (`cocina` / `cocina123`).
 - **Deshacer usa pila** porque se deshace **la última** acción (LIFO); **los pedidos usan cola**
   porque se atienden **por orden de llegada** (FIFO).
 - **`comedoripf://menu/999`** → la ruta existe (`[id]`) pero la pantalla valida y muestra «No existe

@@ -4,7 +4,14 @@ export default function CarritoLayout() {
   return (
     <Stack screenOptions={{ headerBackButtonDisplayMode: 'minimal' }}>
       <Stack.Screen name="index" options={{ title: 'Carrito' }} />
-      <Stack.Screen name="nota" options={{ title: 'Aclaración para la cocina' }} />
+      <Stack.Screen
+        name="nota"
+        options={{
+          title: 'Aclaración para la cocina',
+          presentation: 'formSheet',
+          sheetAllowedDetents: [0.5],
+        }}
+      />
     </Stack>
   );
 }
