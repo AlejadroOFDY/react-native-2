@@ -58,6 +58,7 @@ function FilaPermiso({ recurso }: { recurso: Recurso }) {
 
   const esNotificaciones = recurso === 'notificaciones';
   const esFotos = recurso === 'fotos';
+  const esProvisional = recurso === 'notificaciones' && permiso.parcial;
 
   const detalle = esFotos
     ? permiso.detalle ?? 'No se pide: usás el selector del sistema'
@@ -69,7 +70,11 @@ function FilaPermiso({ recurso }: { recurso: Recurso }) {
         <ThemedText style={styles.nombre}>{config.titulo}</ThemedText>
         <BadgeEstado
           estado={
-            esFotos && permiso.estado !== 'concedido' ? 'no_requerido' : permiso.estado
+            esProvisional
+              ? 'provisional'
+              : esFotos && permiso.estado !== 'concedido'
+                ? 'no_requerido'
+                : permiso.estado
           }
         />
       </Fila>
@@ -82,7 +87,9 @@ function FilaPermiso({ recurso }: { recurso: Recurso }) {
       {permiso.parcial ? (
         <View style={[styles.avisoParcial, { backgroundColor: tema.warningSoft }]}>
           <ThemedText type="small" themeColor="warning">
-            Acceso parcial. La app se adapta y no muestra datos exactos.
+            {esProvisional
+              ? 'Notificaciones provisionales: se entregan en silencio hasta que la persona elija mostrarlas.'
+              : 'Acceso parcial. La app se adapta y no muestra datos exactos.'}
           </ThemedText>
         </View>
       ) : null}

@@ -12,6 +12,7 @@ import { Radius, Spacing } from '@/constants/theme';
 import { usePermiso } from '@/hooks/usePermiso';
 import { useTheme } from '@/hooks/use-theme';
 import { useBorrador } from '@/lib/borrador';
+import { rutaAjustes } from '@/lib/permisos';
 
 type Modo = 'inicio' | 'camara' | 'previa';
 
@@ -193,7 +194,7 @@ export default function FotoScreen() {
             Cámara bloqueada
           </ThemedText>
           <ThemedText type="small" themeColor="danger">
-            Ajustes &gt; Aplicaciones &gt; Mantenimiento IPF &gt; Permisos &gt; Cámara
+            {rutaAjustes('camara')}
           </ThemedText>
           <Boton titulo="Abrir Ajustes" variante="peligro" onPress={camara.abrirAjustes} />
         </Tarjeta>

@@ -35,8 +35,8 @@ export type RecursoConfig = {
   /** Beneficio concreto, en el molde "Usamos tu [dato] para [beneficio]". */
   beneficio: string;
   explicacion: string;
-  /** Camino aproximado en Ajustes, para la pantalla de bloqueado. */
-  ajustes: string;
+  /** Camino aproximado en Ajustes, por plataforma. */
+  ajustes: { android: string; ios: string };
   consultar: () => Promise<RespuestaPermiso>;
   pedir: (() => Promise<RespuestaPermiso>) | null;
 };
@@ -50,7 +50,10 @@ export const RECURSOS: Record<Recurso, RecursoConfig> = {
     beneficio: MENSAJE_CAMARA,
     explicacion:
       'La cámara se enciende solo cuando tocás "Escanear QR" o "Sacar foto". Si no la das, podés escribir el aula a mano y elegir una foto de la galería.',
-    ajustes: 'Ajustes > Aplicaciones > Mantenimiento IPF > Permisos > Cámara',
+    ajustes: {
+      android: 'Ajustes > Aplicaciones > Mantenimiento IPF > Permisos > Cámara',
+      ios: 'Ajustes > Mantenimiento IPF > Cámara',
+    },
     consultar: () => Camera.getCameraPermissionsAsync(),
     pedir: () => Camera.requestCameraPermissionsAsync(),
   },
@@ -60,7 +63,10 @@ export const RECURSOS: Record<Recurso, RecursoConfig> = {
       'Usamos tu ubicación para marcar dónde está el desperfecto dentro del edificio.',
     explicacion:
       'Solo pedimos la ubicación mientras usás la app. No mostramos coordenadas exactas si elegís ubicación aproximada y nunca la compartimos con terceros.',
-    ajustes: 'Ajustes > Aplicaciones > Mantenimiento IPF > Permisos > Ubicación',
+    ajustes: {
+      android: 'Ajustes > Aplicaciones > Mantenimiento IPF > Permisos > Ubicación',
+      ios: 'Ajustes > Mantenimiento IPF > Ubicación',
+    },
     consultar: () => Location.getForegroundPermissionsAsync(),
     pedir: () => Location.requestForegroundPermissionsAsync(),
   },
@@ -70,13 +76,22 @@ export const RECURSOS: Record<Recurso, RecursoConfig> = {
       'Usamos las notificaciones para avisarte cuando se resuelve un reporte que hiciste.',
     explicacion:
       'El permiso se pide recién cuando activás el interruptor de avisos. Si no lo das, igual podés ver las novedades en la bandeja de Avisos.',
-    ajustes: 'Ajustes > Aplicaciones > Mantenimiento IPF > Notificaciones',
+    ajustes: {
+      android: 'Ajustes > Aplicaciones > Mantenimiento IPF > Notificaciones',
+      ios: 'Ajustes > Mantenimiento IPF > Notificaciones',
+    },
     consultar: () => Notifications.getPermissionsAsync(),
     pedir: async () => {
       // Android 13+: el canal debe existir antes del diálogo del sistema.
       await crearCanalReportes();
       return Notifications.requestPermissionsAsync({
-        ios: { allowAlert: true, allowBadge: true, allowSound: true },
+        ios: {
+          allowAlert: true,
+          allowBadge: true,
+          allowSound: true,
+          // En iOS permite notificaciones silenciosas sin diálogo (desafío G4).
+          allowProvisional: true,
+        },
       });
     },
   },
@@ -86,13 +101,22 @@ export const RECURSOS: Record<Recurso, RecursoConfig> = {
       'Usamos tus fotos para adjuntar la imagen del desperfecto al reporte.',
     explicacion:
       'No pedimos permiso de galería: usás el selector del sistema y elegís solo la foto que querés adjuntar. La app nunca accede al resto de tus fotos.',
-    ajustes: 'Ajustes > Aplicaciones > Mantenimiento IPF > Permisos > Fotos',
+    ajustes: {
+      android: 'Ajustes > Aplicaciones > Mantenimiento IPF > Permisos > Fotos',
+      ios: 'Ajustes > Mantenimiento IPF > Fotos',
+    },
     consultar: () => ImagePicker.getMediaLibraryPermissionsAsync(),
     pedir: null,
   },
 };
 
 export const LISTA_RECURSOS: Recurso[] = ['camara', 'ubicacion', 'notificaciones', 'fotos'];
+
+/** Ruta de Ajustes que corresponde mostrar según la plataforma. */
+export function rutaAjustes(recurso: Recurso): string {
+  const { ajustes } = RECURSOS[recurso];
+  return Platform.OS === 'ios' ? ajustes.ios : ajustes.android;
+}
 
 export function esRecurso(valor: string): valor is Recurso {
   return valor === 'camara' || valor === 'ubicacion' || valor === 'notificaciones' || valor === 'fotos';

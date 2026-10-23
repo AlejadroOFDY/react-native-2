@@ -41,3 +41,10 @@ example
 # generated native folders
 /ios
 /android
+
+# caches de herramientas
+DawnCache/
+GPUCache/
+
+# guía personal de defensa (no se entrega)
+defensa.md

@@ -12,6 +12,7 @@ import { Radius, Spacing } from '@/constants/theme';
 import { usePermiso } from '@/hooks/usePermiso';
 import { useTheme } from '@/hooks/use-theme';
 import { useBorrador } from '@/lib/borrador';
+import { rutaAjustes } from '@/lib/permisos';
 
 export default function EscanearScreen() {
   const router = useRouter();
@@ -159,7 +160,7 @@ export default function EscanearScreen() {
             Ya dijiste que no y el sistema no permite volver a preguntar desde la app.
           </ThemedText>
           <ThemedText type="small" themeColor="danger" style={styles.ruta}>
-            Ajustes &gt; Aplicaciones &gt; Mantenimiento IPF &gt; Permisos &gt; Cámara
+            {rutaAjustes('camara')}
           </ThemedText>
         </Tarjeta>
 

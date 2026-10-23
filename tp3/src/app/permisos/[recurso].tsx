@@ -11,7 +11,7 @@ import { ThemedText } from '@/components/themed-text';
 import { Radius, Spacing } from '@/constants/theme';
 import { usePermiso } from '@/hooks/usePermiso';
 import { useTheme } from '@/hooks/use-theme';
-import { esRecurso, RECURSOS, type Recurso } from '@/lib/permisos';
+import { esRecurso, RECURSOS, rutaAjustes, type Recurso } from '@/lib/permisos';
 
 /**
  * Pantalla previa al diálogo del sistema.
@@ -27,6 +27,7 @@ export default function PantallaPreviaPermiso() {
   const recurso: Recurso = valido ? recursoTexto : 'camara';
   const config = RECURSOS[recurso];
   const permiso = usePermiso(recurso);
+  const esProvisional = recurso === 'notificaciones' && permiso.parcial;
 
   const [pidiendo, setPidiendo] = useState(false);
   const [mensaje, setMensaje] = useState<string | null>(null);
@@ -105,7 +106,7 @@ export default function PantallaPreviaPermiso() {
         <ThemedText type="subtitle" style={styles.titulo}>
           {config.titulo}
         </ThemedText>
-        <BadgeEstado estado={permiso.estado} />
+        <BadgeEstado estado={esProvisional ? 'provisional' : permiso.estado} />
       </View>
 
       <Tarjeta>
@@ -116,6 +117,18 @@ export default function PantallaPreviaPermiso() {
         {permiso.detalle ? (
           <ThemedText type="smallBold" themeColor="primary">
             {permiso.detalle}
+          </ThemedText>
+        ) : null}
+        {esProvisional ? (
+          <ThemedText type="small" themeColor="warning">
+            Llegan en silencio: iOS no muestra el diálogo y la persona puede pasarlas a
+            visibles cuando quiera.
+          </ThemedText>
+        ) : null}
+        {recurso === 'notificaciones' && !esProvisional ? (
+          <ThemedText type="small" themeColor="textSecondary">
+            En iOS este permiso también puede quedar en modo provisional: la app recibe avisos
+            silenciosos sin mostrar el diálogo.
           </ThemedText>
         ) : null}
       </Tarjeta>
@@ -129,7 +142,7 @@ export default function PantallaPreviaPermiso() {
             Habilitá {config.titulo.toLowerCase()} desde:
           </ThemedText>
           <ThemedText type="small" themeColor="danger" style={styles.ruta}>
-            {config.ajustes}
+            {rutaAjustes(recurso)}
           </ThemedText>
           <ThemedText type="small" themeColor="danger">
             Al volver, esta pantalla se actualiza sola.

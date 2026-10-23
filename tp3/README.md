@@ -295,24 +295,34 @@ Ejecutado con:
 npx expo prebuild --platform android --clean
 ```
 
-En `android/app/src/main/AndroidManifest.xml` (manifiesto fuente, antes de fusionar
-las librerías) aparecieron:
+En `android/app/src/main/AndroidManifest.xml` (manifiesto fuente) y en los manifests de
+las librerías (`expo-camera`, `expo-image-picker`, `expo-location`, `expo-notifications`)
+aparecieron estos permisos. La tabla combina ambos: los que dicen “manifiesto de
+librería” se fusionan en la build y no se ven en el archivo fuente.
 
-| Permiso | Quién lo agrega | ¿Se quitó? |
-| --- | --- | --- |
-| `INTERNET` | plantilla de Expo | No (necesario para Metro/red) |
-| `CAMERA` | `expo-camera` / `expo-image-picker` | No (funcionalidad principal) |
-| `ACCESS_COARSE_LOCATION` | `expo-location` | No (ubicación aproximada) |
-| `ACCESS_FINE_LOCATION` | `expo-location` | No (el sistema decide precisa/aproximada) |
-| `VIBRATE` | plantilla / notificaciones | No (vibración del canal) |
-| `RECORD_AUDIO` | `expo-camera` / `expo-image-picker` | **Sí** (`tools:node="remove"`) |
-| `READ_EXTERNAL_STORAGE` | `expo-image-picker` | **Sí** |
-| `WRITE_EXTERNAL_STORAGE` | `expo-image-picker` | **Sí** |
-| `SYSTEM_ALERT_WINDOW` | plantilla de desarrollo | **Sí** |
-| `ACCESS_BACKGROUND_LOCATION` | `expo-location` | **Sí** |
+| Permiso | Quién lo agrega | ¿Queda? | Motivo |
+| --- | --- | --- | --- |
+| `INTERNET` | plantilla de Expo | Sí | Red de desarrollo; no accede a datos sensibles |
+| `CAMERA` | `expo-camera` y `expo-image-picker` | Sí | Leer el QR y sacar la foto |
+| `ACCESS_COARSE_LOCATION` | `expo-location` | Sí | Ubicación aproximada |
+| `ACCESS_FINE_LOCATION` | `expo-location` | Sí | El sistema decide precisa/aproximada |
+| `POST_NOTIFICATIONS` | `expo-notifications` (manifiesto de librería) | Sí | Aviso local de resolución; runtime en Android 13+ |
+| `RECEIVE_BOOT_COMPLETED` | `expo-notifications` (manifiesto de librería) | Sí | Reprogramar notificaciones tras reiniciar; no accede a datos |
+| `VIBRATE` | plantilla de Expo / `expo-notifications` | Sí | Vibración del canal de notificaciones |
+| `READ_EXTERNAL_STORAGE` | `expo-image-picker` (`maxSdkVersion="32"`) | **No** (`tools:node="remove"`) | El selector del sistema no lo necesita |
+| `WRITE_EXTERNAL_STORAGE` | `expo-image-picker` (`maxSdkVersion="32"`) | **No** | No escribimos en almacenamiento compartido |
+| `READ_MEDIA_IMAGES` / `READ_MEDIA_VIDEO` / `READ_MEDIA_AUDIO` | ninguna librería; se bloquean de forma preventiva | **No** | No leemos la galería completa |
+| `RECORD_AUDIO` | `expo-camera` / `expo-image-picker` si el micrófono está habilitado; acá está desactivado | **No** | No grabamos audio |
+| `SYSTEM_ALERT_WINDOW` | plantilla de desarrollo (manifest `debug`) | **No** | No mostramos overlays |
+| `ACCESS_BACKGROUND_LOCATION` | `expo-location` solo si se habilita background; acá no | **No** | Solo ubicación en primer plano |
+| `SCHEDULE_EXACT_ALARM` | — | **No se declara** | No usamos alarmas exactas |
 
-`POST_NOTIFICATIONS` lo aporta `expo-notifications` en el manifiesto fusionado (no se
-ve en el fuente). `android/` se borró después de la auditoría: se regenera en cada
+`POST_NOTIFICATIONS` y `RECEIVE_BOOT_COMPLETED` vienen del manifiesto de
+`expo-notifications` y se fusionan en la build; no aparecen en el archivo fuente. No se
+compiló el APK (no hay Android SDK en el equipo), así que la tabla es la unión de
+manifiesto fuente + manifests de librerías, no el artifact final de Gradle.
+
+`android/` se borró después de la auditoría: está gitignoreado y se regenera en cada
 build (CNG).
 
 ---
@@ -378,6 +388,26 @@ la cátedra.
 
 ---
 
+## Desafíos opcionales (G4)
+
+- **Auditoría del manifiesto**: realizada; ver la tabla de la sección anterior.
+- **Notificaciones provisionales (iOS)**: el pedido de `expo-notifications` incluye
+  `allowProvisional: true`. Cuando iOS concede el modo provisional, `/permisos` y
+  `/ajustes-app` muestran el badge **Provisional**, el matiz “Notificaciones
+  provisionales” y una aclaración de que llegan en silencio. En Android la opción no
+  tiene efecto.
+- **Bloqueo por plataforma**: las pantallas de permiso bloqueado muestran la ruta
+  exacta de Ajustes según `Platform.OS` mediante `rutaAjustes()` en
+  `src/lib/permisos.ts`. Se usa en la pantalla previa, el escáner, la foto y la pantalla
+  de avisos.
+- **Nota de voz**: no implementada. Requiere `expo-audio`, desbloquear `RECORD_AUDIO` y
+  una nueva build nativa; queda pendiente.
+
+> La parte de notificaciones provisionales es específica de iOS y no se pudo probar en
+> un dispositivo Apple: está validada por tipos y revisión de código.
+
+---
+
 ## Decisiones y limitaciones
 
 - **Sin backend**: los reportes viven en el dispositivo. No hay usuarios ni sincronización.
@@ -390,3 +420,10 @@ la cátedra.
 - **iOS**: la configuración está completa (textos de propósito, permisos), pero las
   pruebas se hicieron solo en Android, como pidió la cátedra.
 - `expo-permissions` no se usa: está deprecado y cada módulo expone su propio permiso.
+
+---
+
+## Documentación de la entrega
+
+- [`RESPUESTAS.md`](RESPUESTAS.md): respuestas de las Partes A–F.
+- [`docs/`](docs): capturas y video de la demo.

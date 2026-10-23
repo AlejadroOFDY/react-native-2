@@ -6,7 +6,7 @@ import { useTheme } from '@/hooks/use-theme';
 import type { EstadoPermiso } from '@/lib/permisos';
 import { ETIQUETA_ESTADO, type EstadoReporte } from '@/lib/tipos';
 
-type Estado = EstadoReporte | EstadoPermiso | 'no_requerido';
+type Estado = EstadoReporte | EstadoPermiso | 'no_requerido' | 'provisional';
 
 const ETIQUETAS: Record<Estado, string> = {
   ...ETIQUETA_ESTADO,
@@ -15,6 +15,7 @@ const ETIQUETAS: Record<Estado, string> = {
   preguntable: 'Preguntable',
   bloqueado: 'Bloqueado',
   no_requerido: 'No se pide',
+  provisional: 'Provisional',
 };
 
 const COLORES: Record<Estado, { texto: ThemeColor; fondo: ThemeColor }> = {
@@ -26,6 +27,7 @@ const COLORES: Record<Estado, { texto: ThemeColor; fondo: ThemeColor }> = {
   preguntable: { texto: 'warning', fondo: 'warningSoft' },
   bloqueado: { texto: 'danger', fondo: 'dangerSoft' },
   no_requerido: { texto: 'textSecondary', fondo: 'backgroundSelected' },
+  provisional: { texto: 'warning', fondo: 'warningSoft' },
 };
 
 type Props = {

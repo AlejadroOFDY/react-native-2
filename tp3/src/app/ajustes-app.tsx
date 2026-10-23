@@ -11,6 +11,7 @@ import { Spacing } from '@/constants/theme';
 import { usePermiso } from '@/hooks/usePermiso';
 import { useTheme } from '@/hooks/use-theme';
 import { cancelarAvisosProgramados } from '@/lib/notificaciones';
+import { rutaAjustes } from '@/lib/permisos';
 import { useReportes } from '@/lib/reportes';
 
 export default function AjustesAppScreen() {
@@ -21,6 +22,7 @@ export default function AjustesAppScreen() {
   const [pendiente, setPendiente] = useState(false);
   const [mensaje, setMensaje] = useState<string | null>(null);
   const [mensajeDatos, setMensajeDatos] = useState<string | null>(null);
+  const esProvisional = permiso.parcial;
 
   // Releemos el permiso cada vez que la pantalla vuelve a primer plano.
   useFocusEffect(
@@ -119,7 +121,7 @@ export default function AjustesAppScreen() {
           <ThemedText type="small" themeColor="textSecondary">
             Estado del permiso:
           </ThemedText>
-          <BadgeEstado estado={permiso.estado} />
+          <BadgeEstado estado={esProvisional ? 'provisional' : permiso.estado} />
         </View>
 
         {permiso.detalle ? (
@@ -128,8 +130,20 @@ export default function AjustesAppScreen() {
           </ThemedText>
         ) : null}
 
+        {esProvisional ? (
+          <ThemedText type="small" themeColor="warning">
+            En iOS quedaron como provisionales: llegan en silencio hasta que las pases a
+            visibles en Ajustes.
+          </ThemedText>
+        ) : null}
+
         {permiso.estado === 'bloqueado' ? (
-          <Boton titulo="Abrir Ajustes" variante="peligro" onPress={permiso.abrirAjustes} />
+          <>
+            <ThemedText type="small" themeColor="danger" style={styles.ruta}>
+              {rutaAjustes('notificaciones')}
+            </ThemedText>
+            <Boton titulo="Abrir Ajustes" variante="peligro" onPress={permiso.abrirAjustes} />
+          </>
         ) : null}
       </Tarjeta>
 
@@ -205,5 +219,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: Spacing.two,
+  },
+  ruta: {
+    fontWeight: '700',
   },
 });
